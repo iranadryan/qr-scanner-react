@@ -53,8 +53,13 @@ function App() {
   useEffect(() => {
     async function loadVideoInputDevices() {
       const videoInputDevices = await BrowserQRCodeReader.listVideoInputDevices()
+
+      if (videoInputDevices.length === 0) {
+        alert('Nenhum dispositivo encontrado')
+      }
       
       setSelectedDeviceId(videoInputDevices[0].deviceId)
+      alert(`Conectado ao dispositivo: ${videoInputDevices[0].deviceId}`)
     }
 
     loadVideoInputDevices()
