@@ -67,21 +67,42 @@ function App() {
 
   useEffect(() => {
     async function loadVideoInputDevices() {
-      const videoInputDevices =
-        await BrowserQRCodeReader.listVideoInputDevices()
+      try {
+        if (
+          !(
+            'mediaDevices' in navigator &&
+            'getUserMedia' in navigator.mediaDevices
+          )
+        ) {
+          return alert('Seu navegador não suporta essa funcionalidade')
+        }
 
-      if (videoInputDevices.length === 0) {
-        return alert('Nenhum dispositivo encontrado')
+        const response = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        })
+
+        if (!response) {
+          return alert('Sem sua permissão não é possível utilizar a aplicação')
+        }
+
+        const videoInputDevices =
+          await BrowserQRCodeReader.listVideoInputDevices()
+
+        if (videoInputDevices.length === 0) {
+          return alert('Nenhum dispositivo encontrado')
+        }
+
+        setDevicesOptions(
+          videoInputDevices.map((device) => ({
+            value: device.deviceId,
+            label: device.label,
+          })),
+        )
+
+        setSelectedDeviceId(videoInputDevices[0].deviceId)
+      } catch {
+        return alert('Sem sua permissão não é possível utilizar a aplicação')
       }
-
-      setDevicesOptions(
-        videoInputDevices.map((device) => ({
-          value: device.deviceId,
-          label: device.label,
-        })),
-      )
-
-      setSelectedDeviceId(videoInputDevices[0].deviceId)
     }
 
     loadVideoInputDevices()
