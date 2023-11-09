@@ -23,7 +23,7 @@ main video {
   margin-top: 12px;
   margin-bottom: 20px;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: 150%;
   object-fit: cover;
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
 }
@@ -39,6 +39,10 @@ main button {
   border: 1px solid rgba(27, 31, 35, .15);
   box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
   color: #fff;
+}
+
+main button:active {
+  filter: brightness(0.8);
 }
 
 main select {
