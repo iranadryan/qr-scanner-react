@@ -12,7 +12,7 @@ interface IOption {
 
 function App() {
   const [devicesOptions, setDevicesOptions] = useState<IOption[]>([])
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null)
+  const [selectedDevice, setSelectedDevice] = useState<string | undefined>()
   const videoRef = useRef<HTMLVideoElement>(null)
   const hints = useMemo(() => new Map(), [])
   const formats = [BarcodeFormat.QR_CODE]
@@ -44,9 +44,9 @@ function App() {
   }
 
   const decodeOnce = useCallback(() => {
-    if (videoRef.current && selectedDeviceId) {
+    if (videoRef.current && selectedDevice) {
       codeReader.decodeFromVideoDevice(
-        selectedDeviceId,
+        selectedDevice,
         videoRef.current,
         async (result, error, controls) => {
           if (error) {
@@ -63,7 +63,7 @@ function App() {
         },
       )
     }
-  }, [codeReader, selectedDeviceId])
+  }, [codeReader, selectedDevice])
 
   useEffect(() => {
     async function loadVideoInputDevices() {
@@ -99,7 +99,7 @@ function App() {
           })),
         )
 
-        setSelectedDeviceId(videoInputDevices[0].deviceId)
+        setSelectedDevice(videoInputDevices[0].deviceId)
       } catch {
         return alert('Sem sua permissão não é possível utilizar a aplicação')
       }
@@ -114,7 +114,12 @@ function App() {
       <button type="button" onClick={decodeOnce}>
         Start
       </button>
-      <select name="devices" id="devices">
+      <select
+        name="devices"
+        id="devices"
+        value={selectedDevice}
+        onChange={(e) => setSelectedDevice(e.target.value)}
+      >
         {devicesOptions.map((deviceOption) => (
           <option key={deviceOption.value} value={deviceOption.value}>
             {deviceOption.label}
