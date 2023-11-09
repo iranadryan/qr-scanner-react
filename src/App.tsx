@@ -1,10 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { BrowserQRCodeReader } from "@zxing/browser"
-import { BarcodeFormat, DecodeHintType } from "@zxing/library"
-import axios, { AxiosError } from "axios"
+import axios, { AxiosError } from 'axios'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { BrowserQRCodeReader } from '@zxing/browser'
+import { BarcodeFormat, DecodeHintType } from '@zxing/library'
 import { Buffer } from 'buffer'
+import './styles.css'
+
+interface IOption {
+  value: string
+  label: string
+}
 
 function App() {
+  const [devicesOptions, setDevicesOptions] = useState<IOption[]>([])
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const hints = useMemo(() => new Map(), [])
@@ -16,13 +23,17 @@ function App() {
 
   async function vioDecode(file: Uint8Array) {
     try {
-      const { data } = await axios.post('https://gateway.apiserpro.serpro.gov.br/viodec-trial/v1/decode', file, {
-        headers: {
-          Accept: 'application/json',
-          Authorization: 'Bearer 06aef429-a981-3ec5-a1f8-71d38d86481e',
-          "Content-Type": 'application/octet-stream'
-        }
-      })
+      const { data } = await axios.post(
+        'https://gateway.apiserpro.serpro.gov.br/viodec-trial/v1/decode',
+        file,
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: 'Bearer 06aef429-a981-3ec5-a1f8-71d38d86481e',
+            'Content-Type': 'application/octet-stream',
+          },
+        },
+      )
 
       alert(JSON.stringify(data))
     } catch (error) {
@@ -34,42 +45,62 @@ function App() {
 
   const decodeOnce = useCallback(() => {
     if (videoRef.current && selectedDeviceId) {
-      codeReader.decodeFromVideoDevice(selectedDeviceId, videoRef.current, async (result, error, controls) => {
-        if (error) {
-          return console.error(error)
-        }
+      codeReader.decodeFromVideoDevice(
+        selectedDeviceId,
+        videoRef.current,
+        async (result, error, controls) => {
+          if (error) {
+            return console.error(error)
+          }
 
-        controls.stop()
-        if (result) {
-          const str = result.toString() 
-          const buf = new Buffer(str, 'latin1')
+          controls.stop()
+          if (result) {
+            const str = result.toString()
+            const buf = Buffer.from(str, 'latin1')
 
-          vioDecode(buf)
-        }
-      })
+            vioDecode(buf)
+          }
+        },
+      )
     }
   }, [codeReader, selectedDeviceId])
 
   useEffect(() => {
     async function loadVideoInputDevices() {
-      const videoInputDevices = await BrowserQRCodeReader.listVideoInputDevices()
+      const videoInputDevices =
+        await BrowserQRCodeReader.listVideoInputDevices()
 
       if (videoInputDevices.length === 0) {
-        alert('Nenhum dispositivo encontrado')
+        return alert('Nenhum dispositivo encontrado')
       }
-      
+
+      setDevicesOptions(
+        videoInputDevices.map((device) => ({
+          value: device.deviceId,
+          label: device.label,
+        })),
+      )
+
       setSelectedDeviceId(videoInputDevices[0].deviceId)
-      alert(`Conectado ao dispositivo: ${videoInputDevices[0].deviceId}`)
     }
 
     loadVideoInputDevices()
   }, [])
   return (
-    <>
-      <h1>ZXing QRCode Scanner - ReactJS</h1>
-      <video ref={videoRef} width={400} height={320} style={{ border: '1px solid gray' }}></video>
-      <button type="button" onClick={decodeOnce}>Start</button>
-    </>
+    <main>
+      <h1>ZXing QRCode Scanner</h1>
+      <video ref={videoRef}></video>
+      <button type="button" onClick={decodeOnce}>
+        Start
+      </button>
+      <select name="devices" id="devices">
+        {devicesOptions.map((deviceOption) => (
+          <option key={deviceOption.value} value={deviceOption.value}>
+            {deviceOption.label}
+          </option>
+        ))}
+      </select>
+    </main>
   )
 }
 
